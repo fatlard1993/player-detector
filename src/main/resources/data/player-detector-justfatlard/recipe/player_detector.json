@@ -1,0 +1,17 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"L",
+		"R",
+		"S"
+	],
+	"key": {
+		"L": "minecraft:lapis_lazuli",
+		"R": "minecraft:redstone",
+		"S": "minecraft:smooth_stone_slab"
+	},
+	"result": {
+		"id": "player-detector-justfatlard:player_detector",
+		"count": 1
+	}
+}

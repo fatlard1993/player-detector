@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "player-detector-justfatlard:item/player_detector"
+  }
+}

@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "player-detector-justfatlard",
+	"version": "${version}",
+
+	"name": "player-detector",
+	"description": "A block that detects nearby players and emits a redstone signal",
+	"authors": [
+		"justfatlard"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/player-detector-justfatlard/icon.png",
+
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"justfatlard.player_detector.Main"
+		]
+	},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=0.18.1",
+		"fabric": "*",
+		"minecraft": "1.21.11",
+		"polymer-core": ">=0.15.0",
+		"polymer-blocks": ">=0.15.0",
+		"polymer-resource-pack": ">=0.15.0"
+	}
+}
