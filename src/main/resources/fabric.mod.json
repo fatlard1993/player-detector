@@ -21,8 +21,9 @@
 	"mixins": [],
 	"depends": {
 		"fabricloader": ">=0.18.1",
-		"fabric": "*",
-		"minecraft": "1.21.11",
+		"fabric-api": "*",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
 		"polymer-core": ">=0.15.0",
 		"polymer-blocks": ">=0.15.0",
 		"polymer-resource-pack": ">=0.15.0"
