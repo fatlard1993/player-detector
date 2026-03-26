@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
@@ -90,6 +91,14 @@ public class PlayerDetector extends Block implements Waterloggable, PolymerTextu
 			updateNeighbors(world, pos);
 		}
 
+		if (playerOn) {
+			world.spawnParticles(
+				ParticleTypes.ELECTRIC_SPARK,
+				pos.getX() + 0.5, pos.getY() + 0.15, pos.getZ() + 0.5,
+				1, 0.3, 0.02, 0.3, 0.01
+			);
+		}
+
 		world.scheduleBlockTick(pos, this, TICK_RATE);
 	}
 
@@ -108,6 +117,14 @@ public class PlayerDetector extends Block implements Waterloggable, PolymerTextu
 		for (Direction direction : Direction.values()) {
 			world.updateNeighborsAlways(pos.offset(direction), this, null);
 		}
+	}
+
+	@Override
+	protected void onStateReplaced(BlockState state, ServerWorld world, BlockPos pos, boolean moved) {
+		if (state.get(POWERED)) {
+			updateNeighbors(world, pos);
+		}
+		super.onStateReplaced(state, world, pos, moved);
 	}
 
 	@Override

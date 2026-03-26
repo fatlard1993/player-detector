@@ -19,9 +19,12 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main implements ModInitializer {
 	public static final String MOD_ID = "player-detector-justfatlard";
+	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static final Identifier PLAYER_DETECTOR_ID = Identifier.of(MOD_ID, "player_detector");
 
@@ -58,7 +61,7 @@ public class Main implements ModInitializer {
 		if (polymerState != null) {
 			PLAYER_DETECTOR_BLOCK.setPolymerBlockState(polymerState);
 		} else {
-			System.err.println("[player-detector] Failed to request polymer model - no slots available");
+			LOGGER.error("Failed to request polymer model - no slots available");
 		}
 
 		// Create item group
@@ -71,6 +74,6 @@ public class Main implements ModInitializer {
 			.build();
 		PolymerItemGroupUtils.registerPolymerItemGroup(Identifier.of(MOD_ID, "player_detector"), group);
 
-		System.out.println("[player-detector] Loaded player-detector (server-side with Polymer)");
+		LOGGER.info("Loaded player-detector (server-side with Polymer)");
 	}
 }

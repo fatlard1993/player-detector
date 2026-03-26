@@ -8,7 +8,10 @@
 	"authors": [
 		"justfatlard"
 	],
-	"contact": {},
+	"contact": {
+		"sources": "https://github.com/fatlard1993/player-detector",
+		"issues": "https://github.com/fatlard1993/player-detector/issues"
+	},
 	"license": "MIT",
 	"icon": "assets/player-detector-justfatlard/icon.png",
 
