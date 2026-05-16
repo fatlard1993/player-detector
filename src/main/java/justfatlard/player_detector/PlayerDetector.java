@@ -1,152 +1,140 @@
 package justfatlard.player_detector;
 
-import eu.pb4.polymer.blocks.api.PolymerTexturedBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.block.Waterloggable;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.tick.ScheduledTickView;
-import xyz.nucleoid.packettweaker.PacketContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
 
-public class PlayerDetector extends Block implements Waterloggable, PolymerTexturedBlock {
-	public static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
-	public static final BooleanProperty POWERED = Properties.POWERED;
+public class PlayerDetector extends Block implements SimpleWaterloggedBlock {
+	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
 	private static final int TICK_RATE = 10; // Check more frequently for responsive feel
 
-	protected static final VoxelShape SHAPE = Block.createCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D);
+	protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D);
 
-	private BlockState polymerBlockState;
-
-	public PlayerDetector(Settings settings) {
+	public PlayerDetector(Properties settings) {
 		super(settings);
-		this.setDefaultState(this.stateManager.getDefaultState()
-			.with(WATERLOGGED, false)
-			.with(POWERED, false));
-	}
-
-	public void setPolymerBlockState(BlockState state) {
-		this.polymerBlockState = state;
+		this.registerDefaultState(this.getStateDefinition().any()
+			.setValue(WATERLOGGED, false)
+			.setValue(POWERED, false));
 	}
 
 	@Override
-	protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(WATERLOGGED, POWERED);
 	}
 
 	@Override
-	public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
 		return SHAPE;
 	}
 
 	@Override
-	public BlockState getPolymerBlockState(BlockState state, PacketContext context) {
-		return this.polymerBlockState != null ? this.polymerBlockState : state;
-	}
-
-	@Override
-	public BlockState getPlacementState(ItemPlacementContext ctx) {
-		FluidState fluidState = ctx.getWorld().getFluidState(ctx.getBlockPos());
-		return this.getDefaultState().with(WATERLOGGED, fluidState.getFluid() == Fluids.WATER);
+	public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+		FluidState fluidState = ctx.getLevel().getFluidState(ctx.getClickedPos());
+		return this.defaultBlockState().setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
 	}
 
 	@Override
 	public FluidState getFluidState(BlockState state) {
-		return state.get(WATERLOGGED) ? Fluids.WATER.getStill(false) : super.getFluidState(state);
+		return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
 	}
 
 	@Override
-	protected void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
-		if (!world.isClient()) {
-			world.scheduleBlockTick(pos, this, TICK_RATE);
+	protected void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+		if (!world.isClientSide()) {
+			world.scheduleTick(pos, this, TICK_RATE);
 		}
 	}
 
 	@Override
-	protected void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+	protected void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
 		boolean playerOn = isPlayerStandingOn(world, pos);
-		boolean currentlyPowered = state.get(POWERED);
+		boolean currentlyPowered = state.getValue(POWERED);
 
 		if (playerOn != currentlyPowered) {
-			world.setBlockState(pos, state.with(POWERED, playerOn), Block.NOTIFY_ALL);
+			world.setBlock(pos, state.setValue(POWERED, playerOn), Block.UPDATE_ALL);
 			updateNeighbors(world, pos);
 		}
 
 		if (playerOn) {
-			world.spawnParticles(
+			world.sendParticles(
 				ParticleTypes.ELECTRIC_SPARK,
 				pos.getX() + 0.5, pos.getY() + 0.15, pos.getZ() + 0.5,
 				1, 0.3, 0.02, 0.3, 0.01
 			);
 		}
 
-		world.scheduleBlockTick(pos, this, TICK_RATE);
+		world.scheduleTick(pos, this, TICK_RATE);
 	}
 
-	private boolean isPlayerStandingOn(World world, BlockPos pos) {
+	private boolean isPlayerStandingOn(Level world, BlockPos pos) {
 		// Detection box just above the block (player standing on it)
-		Box detectionBox = new Box(
+		AABB detectionBox = new AABB(
 			pos.getX(), pos.getY() + 0.125, pos.getZ(),
 			pos.getX() + 1.0, pos.getY() + 1.0, pos.getZ() + 1.0
 		);
-		List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, detectionBox, player -> !player.isSpectator());
+		List<Player> players = world.getEntitiesOfClass(Player.class, detectionBox, player -> !player.isSpectator());
 		return !players.isEmpty();
 	}
 
-	private void updateNeighbors(World world, BlockPos pos) {
-		world.updateNeighborsAlways(pos, this, null);
+	private void updateNeighbors(Level world, BlockPos pos) {
+		world.updateNeighborsAt(pos, this, null);
 		for (Direction direction : Direction.values()) {
-			world.updateNeighborsAlways(pos.offset(direction), this, null);
+			world.updateNeighborsAt(pos.relative(direction), this, null);
 		}
 	}
 
 	@Override
-	protected void onStateReplaced(BlockState state, ServerWorld world, BlockPos pos, boolean moved) {
-		if (state.get(POWERED)) {
+	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean moved) {
+		if (state.getValue(POWERED)) {
 			updateNeighbors(world, pos);
 		}
-		super.onStateReplaced(state, world, pos, moved);
+		super.affectNeighborsAfterRemoval(state, world, pos, moved);
 	}
 
 	@Override
-	protected boolean emitsRedstonePower(BlockState state) {
+	protected boolean isSignalSource(BlockState state) {
 		return true;
 	}
 
 	@Override
-	protected int getWeakRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-		return state.get(POWERED) ? 15 : 0;
+	protected int getSignal(BlockState state, BlockGetter world, BlockPos pos, Direction direction) {
+		return state.getValue(POWERED) ? 15 : 0;
 	}
 
 	@Override
-	protected int getStrongRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-		return state.get(POWERED) && direction == Direction.UP ? 15 : 0;
+	protected int getDirectSignal(BlockState state, BlockGetter world, BlockPos pos, Direction direction) {
+		return state.getValue(POWERED) && direction == Direction.UP ? 15 : 0;
 	}
 
 	@Override
-	public BlockState getStateForNeighborUpdate(BlockState state, WorldView world, ScheduledTickView tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, Random random) {
-		if (state.get(WATERLOGGED)) {
-			tickView.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+	public BlockState updateShape(BlockState state, LevelReader world, ScheduledTickAccess tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
+		if (state.getValue(WATERLOGGED)) {
+			tickView.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
 		}
-		return super.getStateForNeighborUpdate(state, world, tickView, pos, direction, neighborPos, neighborState, random);
+		return super.updateShape(state, world, tickView, pos, direction, neighborPos, neighborState, random);
 	}
 }

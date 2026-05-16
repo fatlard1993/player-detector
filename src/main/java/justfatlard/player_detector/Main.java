@@ -1,24 +1,22 @@
 package justfatlard.player_detector;
 
-import eu.pb4.polymer.blocks.api.BlockModelType;
-import eu.pb4.polymer.blocks.api.PolymerBlockModel;
-import eu.pb4.polymer.blocks.api.PolymerBlockResourceUtils;
-import eu.pb4.polymer.core.api.item.PolymerItemGroupUtils;
-import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
+import justfatlard.pandorical.api.BlockRegistration;
+import justfatlard.pandorical.api.ItemRegistration;
+import justfatlard.pandorical.api.PandoricalApi;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,54 +24,49 @@ public class Main implements ModInitializer {
 	public static final String MOD_ID = "player-detector-justfatlard";
 	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static final Identifier PLAYER_DETECTOR_ID = Identifier.of(MOD_ID, "player_detector");
+	public static final Identifier PLAYER_DETECTOR_ID = Identifier.fromNamespaceAndPath(MOD_ID, "player_detector");
 
 	public static final PlayerDetector PLAYER_DETECTOR_BLOCK = new PlayerDetector(
-		AbstractBlock.Settings.create()
+		BlockBehaviour.Properties.of()
 			.strength(2.0f, 3.0f)
-			.sounds(BlockSoundGroup.STONE)
-			.registryKey(RegistryKey.of(RegistryKeys.BLOCK, PLAYER_DETECTOR_ID))
+			.sound(SoundType.STONE)
+			.setId(ResourceKey.create(Registries.BLOCK, PLAYER_DETECTOR_ID))
 	);
 
 	@Override
 	public void onInitialize() {
-		PolymerResourcePackUtils.addModAssets(MOD_ID);
-		PolymerResourcePackUtils.markAsRequired();
-
-		// Register block
-		Registry.register(Registries.BLOCK, PLAYER_DETECTOR_ID, PLAYER_DETECTOR_BLOCK);
-
-		// Register item
-		RegistryKey<Item> itemKey = RegistryKey.of(RegistryKeys.ITEM, PLAYER_DETECTOR_ID);
-		Item playerDetectorItem = new PlayerDetectorItem(
-			PLAYER_DETECTOR_BLOCK,
-			new Item.Settings().useBlockPrefixedTranslationKey().registryKey(itemKey)
-		);
-		Registry.register(Registries.ITEM, PLAYER_DETECTOR_ID, playerDetectorItem);
-
-		// Setup Polymer model for server-side rendering (flat tripwire for thin blocks)
-		Identifier modelId = Identifier.of(MOD_ID, "block/player_detector");
-		BlockState polymerState = PolymerBlockResourceUtils.requestBlock(
-			BlockModelType.TRIPWIRE_BLOCK_FLAT,
-			PolymerBlockModel.of(modelId)
-		);
-
-		if (polymerState != null) {
-			PLAYER_DETECTOR_BLOCK.setPolymerBlockState(polymerState);
-		} else {
-			LOGGER.error("Failed to request polymer model - no slots available");
+		// Register with Pandorical if available
+		if (PandoricalApi.isAvailable()) {
+			PandoricalApi.content().registerBlock(MOD_ID + ":player_detector", new BlockRegistration()
+				.model(MOD_ID + ":block/player_detector"));
+			PandoricalApi.content().registerItem(MOD_ID + ":player_detector", new ItemRegistration()
+				.model(MOD_ID + ":item/player_detector"));
+			PandoricalApi.content().registerModAssets(MOD_ID);
 		}
 
-		// Create item group
-		ItemGroup group = PolymerItemGroupUtils.builder()
-			.displayName(Text.literal("Player Detector"))
+		// Register block
+		Registry.register(BuiltInRegistries.BLOCK, PLAYER_DETECTOR_ID, PLAYER_DETECTOR_BLOCK);
+
+		// Register item
+		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, PLAYER_DETECTOR_ID);
+		Item playerDetectorItem = new PlayerDetectorItem(
+			PLAYER_DETECTOR_BLOCK,
+			new Item.Properties().useBlockDescriptionPrefix().setId(itemKey)
+		);
+		Registry.register(BuiltInRegistries.ITEM, PLAYER_DETECTOR_ID, playerDetectorItem);
+
+		// Create creative tab
+		ResourceKey<CreativeModeTab> tabKey = ResourceKey.create(
+			Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, "player_detector"));
+		CreativeModeTab group = FabricCreativeModeTab.builder()
+			.title(Component.literal("Player Detector"))
 			.icon(() -> new ItemStack(playerDetectorItem))
-			.entries((context, entries) -> {
-				entries.add(new ItemStack(playerDetectorItem));
+			.displayItems((context, entries) -> {
+				entries.accept(new ItemStack(playerDetectorItem));
 			})
 			.build();
-		PolymerItemGroupUtils.registerPolymerItemGroup(Identifier.of(MOD_ID, "player_detector"), group);
+		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabKey, group);
 
-		LOGGER.info("Loaded player-detector (server-side with Polymer)");
+		LOGGER.info("Loaded player-detector (server-side with Pandorical)");
 	}
 }
