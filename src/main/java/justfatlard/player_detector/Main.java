@@ -35,7 +35,6 @@ public class Main implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// Register with Pandorical if available
 		if (PandoricalApi.isAvailable()) {
 			PandoricalApi.content().registerBlock(MOD_ID + ":player_detector", new BlockRegistration()
 				.model(MOD_ID + ":block/player_detector"));
@@ -44,10 +43,8 @@ public class Main implements ModInitializer {
 			PandoricalApi.content().registerModAssets(MOD_ID);
 		}
 
-		// Register block
 		Registry.register(BuiltInRegistries.BLOCK, PLAYER_DETECTOR_ID, PLAYER_DETECTOR_BLOCK);
 
-		// Register item
 		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, PLAYER_DETECTOR_ID);
 		Item playerDetectorItem = new PlayerDetectorItem(
 			PLAYER_DETECTOR_BLOCK,
@@ -55,7 +52,6 @@ public class Main implements ModInitializer {
 		);
 		Registry.register(BuiltInRegistries.ITEM, PLAYER_DETECTOR_ID, playerDetectorItem);
 
-		// Create creative tab
 		ResourceKey<CreativeModeTab> tabKey = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, "player_detector"));
 		CreativeModeTab group = FabricCreativeModeTab.builder()

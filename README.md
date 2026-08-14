@@ -1,11 +1,6 @@
 # Player Detector
 
-A Fabric mod for Minecraft 1.21.11 that adds a redstone block that detects when players stand on it.
-
-![Minecraft 1.21.11](https://img.shields.io/badge/Minecraft-1.21.11-green)
-![Fabric](https://img.shields.io/badge/Mod%20Loader-Fabric-blue)
-![Server-Side](https://img.shields.io/badge/Server--Side-Compatible-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+A Fabric mod that adds a redstone block that detects when players stand on it.
 
 ## Features
 
@@ -19,28 +14,21 @@ A Fabric mod for Minecraft 1.21.11 that adds a redstone block that detects when 
 ![Player Detector](img.png)
 ![Player Detector Recipe](img2.png)
 
-## Installation
-
-1. Install [Fabric Loader](https://fabricmc.net/use/) for Minecraft 1.21.11
-2. Download and install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Download the latest release of Player Detector
-4. Place the jar file in your `mods` folder
-
-### Server-Side Installation
-
-This mod works on servers with vanilla clients! When installed on a server:
-- Vanilla clients will be prompted to download a resource pack
-- If accepted, they see custom textures
-- If declined, gameplay features still work
-
-Polymer is bundled with the mod - no additional downloads required.
-
 ## Requirements
 
-- Minecraft 1.21.11
-- Fabric Loader 0.18.1+
-- Fabric API
-- Polymer (bundled)
+- Targets the Minecraft, Fabric Loader, and Fabric API versions declared in this mod's `gradle.properties`; check there for the exact currently-supported version
+- Java version as declared in `fabric.mod.json`'s `depends` block
+- Pandorical (see below)
+
+## Pandorical
+
+Player Detector registers its block and item models through Pandorical's content sync.
+
+**The Pandorical mod must be installed client-side** to see the Player Detector block and item rendered with their custom textures. Without it, the block still functions (emits redstone signal when a player stands on it), but a connecting client cannot see it rendered correctly.
+
+## Installation
+
+Install alongside its declared dependencies (see `fabric.mod.json`), including Pandorical on connecting clients.
 
 ## License
 
