@@ -63,6 +63,10 @@ public class Main implements ModInitializer {
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabKey, group);
 
+		// Guarantees the powered-to-unpowered transition even when the leaving player was
+		// the only thing keeping the detector's chunk ticking (see DetectorTracker)
+		DetectorTracker.register();
+
 		LOGGER.info("Loaded player-detector (server-side with Pandorical)");
 	}
 }

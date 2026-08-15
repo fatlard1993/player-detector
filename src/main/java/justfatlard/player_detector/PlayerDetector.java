@@ -71,13 +71,7 @@ public class PlayerDetector extends Block implements SimpleWaterloggedBlock {
 
 	@Override
 	protected void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
-		boolean playerOn = isPlayerStandingOn(world, pos);
-		boolean currentlyPowered = state.getValue(POWERED);
-
-		if (playerOn != currentlyPowered) {
-			world.setBlock(pos, state.setValue(POWERED, playerOn), Block.UPDATE_ALL);
-			updateNeighbors(world, pos);
-		}
+		boolean playerOn = refresh(world, pos);
 
 		if (playerOn) {
 			world.sendParticles(
@@ -90,13 +84,42 @@ public class PlayerDetector extends Block implements SimpleWaterloggedBlock {
 		world.scheduleTick(pos, this, TICK_RATE);
 	}
 
-	private boolean isPlayerStandingOn(Level world, BlockPos pos) {
-		// Detection box just above the block (player standing on it)
-		AABB detectionBox = new AABB(
+	/**
+	 * Re-evaluates the detector at {@code pos} and writes the POWERED state if it changed.
+	 * Safe to call from outside the scheduled tick (see {@link DetectorTracker}): a scheduled
+	 * tick only runs while the chunk is simulation-ticking, so the powered-to-unpowered
+	 * transition must also be reachable from player-driven events that can fire while the
+	 * chunk is loaded but no longer ticking (teleport away, disconnect, dimension change).
+	 *
+	 * @return whether a player is currently standing on the detector
+	 */
+	public boolean refresh(ServerLevel world, BlockPos pos) {
+		BlockState state = world.getBlockState(pos);
+		if (state.getBlock() != this) return false;
+
+		boolean playerOn = isPlayerStandingOn(world, pos);
+		if (playerOn != state.getValue(POWERED)) {
+			world.setBlock(pos, state.setValue(POWERED, playerOn), Block.UPDATE_ALL);
+			updateNeighbors(world, pos);
+		}
+		return playerOn;
+	}
+
+	/** Detection box just above the block (player standing on it). */
+	static AABB detectionBox(BlockPos pos) {
+		return new AABB(
 			pos.getX(), pos.getY() + 0.125, pos.getZ(),
 			pos.getX() + 1.0, pos.getY() + 1.0, pos.getZ() + 1.0
 		);
-		List<Player> players = world.getEntitiesOfClass(Player.class, detectionBox, player -> !player.isSpectator());
+	}
+
+	/** Whether this specific player currently counts as standing on a detector at {@code pos}. */
+	boolean isStandingOn(Player player, BlockPos pos) {
+		return !player.isSpectator() && player.getBoundingBox().intersects(detectionBox(pos));
+	}
+
+	private boolean isPlayerStandingOn(Level world, BlockPos pos) {
+		List<Player> players = world.getEntitiesOfClass(Player.class, detectionBox(pos), player -> !player.isSpectator());
 		return !players.isEmpty();
 	}
 
