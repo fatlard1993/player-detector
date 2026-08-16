@@ -14,12 +14,6 @@ A Fabric mod that adds a redstone block that detects when players stand on it.
 ![Player Detector](img.png)
 ![Player Detector Recipe](img2.png)
 
-## Requirements
-
-- Targets the Minecraft, Fabric Loader, and Fabric API versions declared in this mod's `gradle.properties`; check there for the exact currently-supported version
-- Java version as declared in `fabric.mod.json`'s `depends` block
-- Pandorical (see below)
-
 ## Pandorical
 
 Player Detector registers its block and item models through Pandorical's content sync.
@@ -28,8 +22,8 @@ Player Detector registers its block and item models through Pandorical's content
 
 ## Installation
 
-Install alongside its declared dependencies (see `fabric.mod.json`), including Pandorical on connecting clients.
+Install server-side alongside its declared dependencies (see `fabric.mod.json`); connecting clients need only Pandorical. Version targets live in `gradle.properties` (Minecraft, loader, Fabric API) and `fabric.mod.json` (Java).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT, see [LICENSE](LICENSE).
