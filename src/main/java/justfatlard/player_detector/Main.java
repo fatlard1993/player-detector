@@ -37,6 +37,7 @@ public class Main implements ModInitializer {
 	public void onInitialize() {
 		if (PandoricalApi.isAvailable()) {
 			PandoricalApi.content().registerBlock(MOD_ID + ":player_detector", new BlockRegistration()
+				.baseBlock("minecraft:bricks")
 				.model(MOD_ID + ":block/player_detector"));
 			PandoricalApi.content().registerItem(MOD_ID + ":player_detector", new ItemRegistration()
 				.model(MOD_ID + ":item/player_detector"));
