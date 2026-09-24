@@ -7,14 +7,16 @@
       "An icon of its own rather than a borrowed one, and the readme rides along inside the jar."
     ],
     "2.0.0": [
-      "The recipe brings the advancement that unlocks it, so the detector turns up in the recipe book the moment you can make it, and the client is told what it is made of."
+      "The recipe brings the advancement that unlocks it.",
+      "The client is told what it is made of."
     ],
     "1.0.2": [
-      "The signal lets go reliably now, even where the chunk would have dropped the tick that was meant to switch it off.",
+      "The signal lets go reliably, even where the chunk dropped the tick meant to switch it off.",
       "A display name fit for a mod list."
     ],
     "1.0.0": [
-      "A flat, waterloggable redstone block that reads players standing on it and nothing else. Breaks fastest with a pickaxe, and drops itself by hand."
+      "A flat, waterloggable redstone block that reads players standing on it and nothing else.",
+      "Breaks fastest with a pickaxe, and drops itself by hand."
     ]
   }
 }
