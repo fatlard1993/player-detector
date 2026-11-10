@@ -3,6 +3,9 @@
     "A redstone block two pixels tall that puts out a full signal while a player stands on it. Players only, never mobs, never spectators."
   ],
   "versions": {
+    "2.0.3": [
+      "Drop changelog notes for changes nothing in the game shows."
+    ],
     "2.0.0": [
       "The detector recipe has an advancement.",
       "The client is told what it is made of."
