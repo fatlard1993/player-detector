@@ -3,6 +3,9 @@
     "A redstone block two pixels tall that puts out a full signal while a player stands on it. Players only, never mobs, never spectators."
   ],
   "versions": {
+    "2.0.4": [
+      "A demo to play in PvP Dimensions' onboarding."
+    ],
     "2.0.3": [
       "Drop changelog notes for changes nothing in the game shows."
     ],
