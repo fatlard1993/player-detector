@@ -3,6 +3,9 @@
     "A redstone block two pixels tall that puts out a full signal while a player stands on it. Players only, never mobs, never spectators."
   ],
   "versions": {
+    "2.0.5": [
+      "Who stands on which detector is tracked without a fresh map every tick, and forgotten when the server stops."
+    ],
     "2.0.4": [
       "A demo to play in PvP Dimensions' onboarding."
     ],
