@@ -1,5 +1,6 @@
 package justfatlard.player_detector;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -27,23 +28,25 @@ import java.util.UUID;
  * block state only needs the chunk loaded, not ticking, so the power-down always lands.
  */
 public final class DetectorTracker {
-	private static final Map<UUID, GlobalPos> STANDING_ON = new HashMap<>();
+	private static Map<UUID, GlobalPos> standingOn = new HashMap<>();
+	private static Map<UUID, GlobalPos> current = new HashMap<>();
 
 	private DetectorTracker() {}
 
 	public static void register() {
 		ServerTickEvents.END_SERVER_TICK.register(DetectorTracker::onEndTick);
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> standingOn.clear());
 	}
 
 	private static void onEndTick(MinecraftServer server) {
-		Map<UUID, GlobalPos> current = new HashMap<>();
+		current.clear();
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			GlobalPos pos = detectorUnder(player);
 			if (pos != null) current.put(player.getUUID(), pos);
 		}
 
 		// Players that left a detector: moved off, teleported, died, or disconnected
-		for (Map.Entry<UUID, GlobalPos> entry : STANDING_ON.entrySet()) {
+		for (Map.Entry<UUID, GlobalPos> entry : standingOn.entrySet()) {
 			if (!entry.getValue().equals(current.get(entry.getKey()))) {
 				refresh(server, entry.getValue());
 			}
@@ -51,13 +54,14 @@ public final class DetectorTracker {
 
 		// Players that arrived on a detector
 		for (Map.Entry<UUID, GlobalPos> entry : current.entrySet()) {
-			if (!entry.getValue().equals(STANDING_ON.get(entry.getKey()))) {
+			if (!entry.getValue().equals(standingOn.get(entry.getKey()))) {
 				refresh(server, entry.getValue());
 			}
 		}
 
-		STANDING_ON.clear();
-		STANDING_ON.putAll(current);
+		Map<UUID, GlobalPos> previous = standingOn;
+		standingOn = current;
+		current = previous;
 	}
 
 	private static GlobalPos detectorUnder(ServerPlayer player) {
